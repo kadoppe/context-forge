@@ -37,91 +37,7 @@ def test_help_option() -> None:
 
 
 # =============================================================================
-# User Story 2: Install hello-world Command (T014-T015)
-# =============================================================================
-
-
-def test_install_command_creates_file(tmp_path: "Path") -> None:
-    """Test that install command creates the command file in .claude/commands/."""
-    import os
-
-    # Change to temp directory to simulate project root
-    original_cwd = os.getcwd()
-    os.chdir(tmp_path)
-
-    try:
-        result = runner.invoke(app, ["install", "hello-world"])
-        assert result.exit_code == 0
-
-        # Check that file was created
-        target_file = tmp_path / ".claude" / "commands" / "context-forge.hello-world.md"
-        assert target_file.exists()
-        assert "hello" in target_file.read_text().lower()
-    finally:
-        os.chdir(original_cwd)
-
-
-def test_install_command_unknown_name(tmp_path: "Path") -> None:
-    """Test that install command returns error for unknown command name."""
-    import os
-
-    original_cwd = os.getcwd()
-    os.chdir(tmp_path)
-
-    try:
-        result = runner.invoke(app, ["install", "nonexistent-command"])
-        assert result.exit_code != 0
-        # Error message is written to stderr, check output (combined stdout+stderr)
-        output = result.output.lower() if result.output else ""
-        assert "not found" in output or "unknown" in output
-    finally:
-        os.chdir(original_cwd)
-
-
-def test_install_command_overwrite_prompt(tmp_path: "Path") -> None:
-    """Test that install prompts for overwrite when file exists."""
-    import os
-
-    original_cwd = os.getcwd()
-    os.chdir(tmp_path)
-
-    try:
-        # First install
-        runner.invoke(app, ["install", "hello-world"])
-
-        # Second install - should prompt (we'll decline with 'n')
-        result = runner.invoke(app, ["install", "hello-world"], input="n\n")
-        cancelled = "cancel" in result.stdout.lower()
-        skipped = "skip" in result.stdout.lower()
-        assert result.exit_code == 0 or cancelled or skipped
-    finally:
-        os.chdir(original_cwd)
-
-
-def test_install_command_force_flag(tmp_path: "Path") -> None:
-    """Test that --force flag skips overwrite confirmation."""
-    import os
-
-    original_cwd = os.getcwd()
-    os.chdir(tmp_path)
-
-    try:
-        # First install
-        runner.invoke(app, ["install", "hello-world"])
-
-        # Second install with --force
-        result = runner.invoke(app, ["install", "hello-world", "--force"])
-        assert result.exit_code == 0
-
-        # File should still exist
-        target_file = tmp_path / ".claude" / "commands" / "context-forge.hello-world.md"
-        assert target_file.exists()
-    finally:
-        os.chdir(original_cwd)
-
-
-# =============================================================================
-# User Story 3: Project Initialization (T026)
+# User Story 2: Project Initialization (T026)
 # =============================================================================
 
 
@@ -147,6 +63,11 @@ def test_init_command_creates_directories_and_installs(tmp_path: Path) -> None:
         # Check that hello-world command was installed by default
         hello_world = commands_dir / "context-forge.hello-world.md"
         assert hello_world.exists()
+
+        # Check that add-role-knowledge command was installed
+        add_role_knowledge = commands_dir / "context-forge.add-role-knowledge.md"
+        assert add_role_knowledge.exists()
+        assert "ロール" in add_role_knowledge.read_text()
     finally:
         os.chdir(original_cwd)
 
@@ -196,50 +117,49 @@ def test_init_command_existing_directory(tmp_path: Path) -> None:
 
 
 # =============================================================================
-# Command Name Validation (T033)
+# Init Command: Overwrite and Force (T033)
 # =============================================================================
 
 
-def test_install_invalid_command_name_special_chars(tmp_path: Path) -> None:
-    """Test that install rejects command names with special characters."""
+def test_init_command_overwrite_prompt(tmp_path: Path) -> None:
+    """Test that init prompts for overwrite when files exist."""
     import os
 
     original_cwd = os.getcwd()
     os.chdir(tmp_path)
 
     try:
-        result = runner.invoke(app, ["install", "hello@world"])
-        assert result.exit_code == 1
-        assert "letters" in result.output.lower() or "invalid" in result.output.lower()
+        # First init
+        runner.invoke(app, ["init"])
+
+        # Second init - should prompt for each file, decline all with 'n\n' for each
+        # Number of prompts depends on number of templates
+        result = runner.invoke(app, ["init"], input="n\nn\n")
+        # Should complete (skipping existing files)
+        assert result.exit_code == 0
+        assert "Skipped" in result.stdout or "already" in result.stdout.lower()
     finally:
         os.chdir(original_cwd)
 
 
-def test_install_invalid_command_name_spaces(tmp_path: Path) -> None:
-    """Test that install rejects command names with spaces."""
+def test_init_command_force_flag(tmp_path: Path) -> None:
+    """Test that --force flag skips overwrite confirmation."""
     import os
 
     original_cwd = os.getcwd()
     os.chdir(tmp_path)
 
     try:
-        result = runner.invoke(app, ["install", "hello world"])
-        assert result.exit_code == 1
-    finally:
-        os.chdir(original_cwd)
+        # First init
+        runner.invoke(app, ["init"])
 
+        # Second init with --force
+        result = runner.invoke(app, ["init", "--force"])
+        assert result.exit_code == 0
 
-def test_install_valid_command_name_with_underscore(tmp_path: Path) -> None:
-    """Test that command names with underscores are valid (though may not exist)."""
-    import os
-
-    original_cwd = os.getcwd()
-    os.chdir(tmp_path)
-
-    try:
-        # This command doesn't exist, but name should be valid
-        result = runner.invoke(app, ["install", "hello_world"])
-        # Should fail with "not found", not validation error
-        assert "not found" in result.output.lower()
+        # Files should still exist
+        commands_dir = tmp_path / ".claude" / "commands"
+        hello_world = commands_dir / "context-forge.hello-world.md"
+        assert hello_world.exists()
     finally:
         os.chdir(original_cwd)
