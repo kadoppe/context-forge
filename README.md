@@ -36,7 +36,7 @@ git clone https://github.com/kadoppe/context-forge.git
 cd context-forge
 
 # Install dependencies (including dev dependencies)
-uv pip install -e ".[dev]"
+uv sync --dev
 ```
 
 ### Running Commands
@@ -47,7 +47,7 @@ uv run context-forge --version
 uv run context-forge init
 uv run context-forge install hello-world
 
-# Or use the installed command (after `uv pip install -e .`)
+# Or use the installed command (after `uv sync`)
 context-forge --version
 ```
 
