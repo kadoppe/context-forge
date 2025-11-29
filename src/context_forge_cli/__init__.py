@@ -235,95 +235,6 @@ def main_callback(
 
 
 # =============================================================================
-# Install Command (T017-T024)
-# =============================================================================
-
-
-@app.command()
-def install(
-    command_name: str = typer.Argument(
-        ...,
-        help="Name of the command template to install (e.g., hello-world).",
-    ),
-    force: bool = typer.Option(
-        False,
-        "--force",
-        "-f",
-        help="Overwrite existing file without prompting.",
-    ),
-) -> None:
-    """Install a command template to Claude Code.
-
-    Installs the specified command template to .claude/commands/ directory
-    with the 'context-forge.' prefix.
-    """
-    # Validate command name (T033)
-    validation_error = validate_command_name(command_name)
-    if validation_error:
-        show_error(
-            validation_error,
-            hint="Use only letters, numbers, hyphens, and underscores.",
-        )
-        raise typer.Exit(EXIT_ERROR)
-
-    # Load template
-    template = load_template(command_name)
-    if template is None:
-        available = list_available_templates()
-        hint = None
-        if available:
-            hint = f"Available commands: {', '.join(available)}"
-        show_error(f"Command '{command_name}' not found.", hint=hint)
-        raise typer.Exit(EXIT_ERROR)
-
-    # Determine install target
-    target = InstallTarget(project_root=Path.cwd())
-    target_path = target.commands_dir / template.target_filename
-
-    # Check if file exists
-    if target_path.exists() and not force:
-        overwrite = typer.confirm(
-            f"File '{target_path}' already exists. Overwrite?",
-            default=False,
-        )
-        if not overwrite:
-            console.print("[yellow]Installation cancelled.[/yellow]")
-            raise typer.Exit(EXIT_USER_CANCEL)
-
-    # Create directories
-    try:
-        target.commands_dir.mkdir(parents=True, exist_ok=True)
-    except PermissionError:
-        show_error(
-            f"Cannot create directory: {target.commands_dir}",
-            hint="Check write permissions for the project directory.",
-        )
-        raise typer.Exit(EXIT_FILE_ERROR)
-
-    # Read original template file (preserve frontmatter)
-    original_content = template.path.read_text(encoding="utf-8")
-
-    # Write file
-    try:
-        target_path.write_text(original_content, encoding="utf-8")
-    except PermissionError:
-        show_error(
-            f"Cannot write file: {target_path}",
-            hint="Check write permissions for the target directory.",
-        )
-        raise typer.Exit(EXIT_FILE_ERROR)
-
-    # Success message
-    console.print(
-        f"[green]Success![/green] Installed '{command_name}' to {target_path}"
-    )
-    console.print(
-        f"[dim]Use '/context-forge.{command_name}' in Claude Code "
-        "to run this command.[/dim]"
-    )
-
-
-# =============================================================================
 # Init Command (T027-T030)
 # =============================================================================
 
@@ -478,8 +389,8 @@ def init(
             )
     else:
         console.print(
-            "\n[dim]You can install commands later with "
-            "'context-forge install <command>'[/dim]"
+            "\n[dim]You can install commands later by running "
+            "'context-forge init' without --skip-install.[/dim]"
         )
 
 
