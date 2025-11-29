@@ -1,0 +1,14 @@
+{
+  "name": "local",
+  "owner": {
+    "name": "context-forge"
+  },
+  "plugins": [
+    {
+      "name": "context-forge.role-software-engineer",
+      "source": "./context-forge.role-software-engineer",
+      "description": "ソフトウェア開発全般のベストプラクティスと設計パターンの知見を持つ",
+      "version": "1.0.0"
+    }
+  ]
+}

@@ -254,7 +254,37 @@ model: sonnet
 
 ## Phase 7: 完了とプラグイン有効化
 
-### 7.1: settings.json への登録
+### 7.1: marketplace.json の作成・更新
+
+ローカルマーケットプレイスにプラグインを登録するため、`.claude/plugins/.claude-plugin/marketplace.json` を作成・更新します。
+
+1. `.claude/plugins/.claude-plugin/` ディレクトリを作成（存在しない場合）
+2. `.claude/plugins/.claude-plugin/marketplace.json` を読み込む（存在しない場合は新規作成）
+3. 以下の形式でプラグインを登録:
+
+**新規作成の場合:**
+```json
+{
+  "name": "local",
+  "owner": {
+    "name": "context-forge"
+  },
+  "plugins": [
+    {
+      "name": "context-forge.role-{role-name}",
+      "source": "./context-forge.role-{role-name}",
+      "description": "{role-description}",
+      "version": "1.0.0"
+    }
+  ]
+}
+```
+
+**既存ファイルがある場合:**
+- `plugins` 配列に新しいプラグインエントリを追加
+- 同名のプラグインが既に存在する場合は更新（上書き）
+
+### 7.2: settings.json への登録
 
 プラグインを有効化するため、`.claude/settings.json` に自動登録します。
 
@@ -266,7 +296,7 @@ model: sonnet
   "extraKnownMarketplaces": {
     "local": {
       "source": {
-        "source": "local",
+        "source": "directory",
         "path": "./.claude/plugins"
       }
     }
@@ -284,7 +314,7 @@ model: sonnet
 - 既存の `enabledPlugins` 設定を上書きせず、新しいエントリを追加してください
 - 既に `extraKnownMarketplaces.local` が存在する場合は追加不要です
 
-### 7.2: 完了メッセージ
+### 7.3: 完了メッセージ
 
 ```
 ## プラグイン生成完了
@@ -297,6 +327,10 @@ model: sonnet
 **構成**:
 {tree-structure}
 
+### マーケットプレイス登録
+
+`.claude/plugins/.claude-plugin/marketplace.json` にプラグインを登録しました。
+
 ### プラグイン有効化
 
 `.claude/settings.json` に以下を追加しました:
@@ -305,7 +339,7 @@ model: sonnet
   "extraKnownMarketplaces": {
     "local": {
       "source": {
-        "source": "local",
+        "source": "directory",
         "path": "./.claude/plugins"
       }
     }

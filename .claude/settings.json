@@ -1,0 +1,13 @@
+{
+  "extraKnownMarketplaces": {
+    "local": {
+      "source": {
+        "source": "directory",
+        "path": "./.claude/plugins"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "context-forge.role-software-engineer@local": true
+  }
+}
