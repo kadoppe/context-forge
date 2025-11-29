@@ -1,50 +1,166 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+  SYNC IMPACT REPORT
+  ====================
+  Version change: N/A → 1.0.0
+
+  Added principles:
+  - I. Testability First (テスタビリティ優先)
+  - II. LLM-as-a-Judge Quality Assurance (LLM品質保証)
+  - III. Simplicity (シンプリシティ)
+  - IV. Modularity (モジュラリティ)
+  - V. Type Safety (型安全性)
+
+  Added sections:
+  - Core Principles (5 principles)
+  - Quality Gates (品質ゲート)
+  - Development Workflow (開発ワークフロー)
+  - Governance
+
+  Removed sections: N/A (initial version)
+
+  Templates requiring updates:
+  - .specify/templates/plan-template.md: ✅ Compatible (Constitution Check section exists)
+  - .specify/templates/spec-template.md: ✅ Compatible (independent testability aligned)
+  - .specify/templates/tasks-template.md: ✅ Compatible (test-first, phase structure aligned)
+
+  Deferred items: None
+-->
+
+# Context Forge Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Testability First（テスタビリティ優先）
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+すべての実装はテスト可能性を最優先に設計しなければならない。
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+- 全ての機能は自動テストで検証可能でなければならない（MUST）
+- 依存関係は注入可能（injectable）でなければならない（MUST）
+- 副作用を持つ処理は分離し、純粋関数を優先しなければならない（MUST）
+- テストが困難な設計は、設計の問題として扱わなければならない（MUST）
+- 単体テスト、統合テスト、契約テストの境界を明確に定義しなければならない（MUST）
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+**根拠**: テスト可能なコードは保守性が高く、変更に対する信頼性を担保する。
+テストしやすい設計は自然と疎結合になり、品質向上に直結する。
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### II. LLM-as-a-Judge Quality Assurance（LLM品質保証）
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+LLMを活用した継続的な品質評価を実施しなければならない。
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+- コードレビュー、仕様レビュー、設計レビューにLLM評価を組み込まなければならない（MUST）
+- 評価基準は明文化され、再現可能でなければならない（MUST）
+- LLM評価結果はログとして記録し、追跡可能でなければならない（MUST）
+- 人間によるレビューとLLMレビューを併用し、片方のみに依存してはならない（MUST）
+- 評価プロンプトは版管理され、改善サイクルを回さなければならない（SHOULD）
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+**根拠**: LLMを審査者として活用することで、一貫した品質基準の適用と
+スケーラブルな品質保証が可能になる。人間の見落としを補完する役割を果たす。
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+### III. Simplicity（シンプリシティ）
+
+コードとアーキテクチャはシンプルさを維持しなければならない。
+
+- YAGNIの原則に従い、現時点で不要な機能は実装してはならない（MUST）
+- 抽象化は具体的なユースケースが3つ以上存在する場合のみ導入しなければならない（MUST）
+- 設計パターンは問題解決に必要な場合のみ適用しなければならない（MUST）
+- 複雑さを導入する場合は、その理由をドキュメントで正当化しなければならない（MUST）
+- コードの行数よりも可読性と明確さを優先しなければならない（MUST）
+
+**根拠**: 不要な複雑さはバグの温床となり、保守コストを増大させる。
+シンプルな設計は理解しやすく、変更しやすく、テストしやすい。
+
+### IV. Modularity（モジュラリティ）
+
+機能は独立して開発・デプロイ可能なモジュールとして構成しなければならない。
+
+- 各モジュールは単一の責務を持たなければならない（MUST）
+- モジュール間の依存は明示的なインターフェースを通じてのみ行わなければならない（MUST）
+- 循環依存は許可されない（MUST NOT）
+- モジュールは他のモジュールに影響を与えずにテスト可能でなければならない（MUST）
+- 機能追加・変更は既存モジュールへの影響を最小限に抑えなければならない（MUST）
+
+**根拠**: モジュラー設計により、チームは並行して独立した機能を開発できる。
+変更の影響範囲が限定され、リスクが低減される。
+
+### V. Type Safety（型安全性）
+
+静的型付けを活用し、コンパイル時にエラーを検出しなければならない。
+
+- 全てのコードは静的型チェックを通過しなければならない（MUST）
+- `any`型や型アサーションの使用は最小限に抑え、使用時は理由を明記しなければならない（MUST）
+- 外部入力（API、ユーザー入力、ファイル等）は境界で厳密に型検証しなければならない（MUST）
+- ジェネリクスを活用し、型の再利用性と安全性を両立しなければならない（SHOULD）
+- nullableな値は明示的に扱い、ランタイムエラーを防止しなければならない（MUST）
+
+**根拠**: 型システムはコンパイル時にバグを検出する最初の防衛線である。
+型安全なコードはIDEのサポートを最大限に活用でき、開発者体験が向上する。
+
+## Quality Gates（品質ゲート）
+
+実装がこの憲法に準拠しているかを検証するためのゲート。
+
+### Gate 1: テスタビリティチェック
+- [ ] 全ての公開APIにテストが存在するか
+- [ ] 依存関係はモック/スタブ可能か
+- [ ] 副作用は分離されているか
+
+### Gate 2: LLM品質チェック
+- [ ] LLMレビューが実施されたか
+- [ ] 評価結果が記録されたか
+- [ ] 指摘事項に対応したか
+
+### Gate 3: シンプリシティチェック
+- [ ] 不要な抽象化が導入されていないか
+- [ ] 複雑さの正当化がドキュメントされているか
+- [ ] コードは第三者が理解可能か
+
+### Gate 4: モジュラリティチェック
+- [ ] モジュールの責務は単一か
+- [ ] 循環依存は存在しないか
+- [ ] モジュール間インターフェースは明確か
+
+### Gate 5: 型安全性チェック
+- [ ] 静的型チェックがエラーなしで通過するか
+- [ ] any型やas型アサーションの使用は正当化されているか
+- [ ] 外部入力の型検証が境界で実装されているか
+
+## Development Workflow（開発ワークフロー）
+
+### 実装プロセス
+
+1. **設計レビュー**: LLM-as-a-Judgeによる設計評価を実施
+2. **型定義**: インターフェースと型を先に定義
+3. **テスト先行**: テストを先に書き、失敗を確認
+4. **実装**: 最小限のコードで要件を満たす
+5. **リファクタリング**: シンプリシティを維持しつつ改善
+6. **品質ゲート通過**: 全てのゲートをクリア
+
+### コミット規約
+
+- 各コミットは1つの論理的変更のみを含む
+- コミット前に該当するQuality Gateを通過する
+- モジュール境界を跨ぐ変更は特に慎重にレビューする
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+### 憲法の改訂
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+- この憲法への変更は、変更理由の文書化が必須である（MUST）
+- 原則の削除または大幅な変更はMAJORバージョンアップを必要とする
+- 新しい原則またはセクションの追加はMINORバージョンアップを必要とする
+- 文言の修正や明確化はPATCHバージョンアップを必要とする
+
+### 遵守
+
+- 全てのPR/コードレビューはこの憲法への準拠を検証しなければならない（MUST）
+- 違反が発見された場合は、マージ前に対処しなければならない（MUST）
+- 正当な理由がある場合のみ、文書化の上で例外を認める
+
+### バージョニング方針
+
+セマンティックバージョニング（MAJOR.MINOR.PATCH）に従う：
+- **MAJOR**: 原則の削除、または後方互換性のない変更
+- **MINOR**: 新しい原則/セクションの追加、または既存の実質的拡張
+- **PATCH**: 明確化、文言修正、誤字修正
+
+**Version**: 1.0.0 | **Ratified**: 2025-01-29 | **Last Amended**: 2025-01-29
