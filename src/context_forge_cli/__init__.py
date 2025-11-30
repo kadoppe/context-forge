@@ -184,14 +184,19 @@ def read_context_forge_md(project_root: Path) -> ContextForgeMdContent | None:
 
     for line in content.split("\n"):
         # Check for role section header: ### {role-name} ロール
-        if line.startswith(ROLE_HEADER_PREFIX) and line.endswith(ROLE_HEADER_SUFFIX):
+        # Handle trailing whitespace by stripping the line first
+        stripped_line = line.rstrip()
+        if (
+            stripped_line.startswith(ROLE_HEADER_PREFIX)
+            and stripped_line.endswith(ROLE_HEADER_SUFFIX)
+        ):
             # Save previous role if exists
             if current_role is not None:
                 roles[current_role] = current_rules
 
             # Extract role name by removing prefix and suffix
             current_role = (
-                line[len(ROLE_HEADER_PREFIX):]
+                stripped_line[len(ROLE_HEADER_PREFIX):]
                 .removesuffix(ROLE_HEADER_SUFFIX)
                 .strip()
             )

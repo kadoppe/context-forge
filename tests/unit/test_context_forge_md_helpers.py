@@ -95,6 +95,20 @@ class TestReadContextForgeMd:
         assert len(result.roles["software-engineer"]) == 1
         assert len(result.roles["frontend-engineer"]) == 2
 
+    def test_handles_trailing_whitespace_in_role_header(self, tmp_path: Path) -> None:
+        """Should handle role headers with trailing whitespace."""
+        context_forge_md = tmp_path / CONTEXT_FORGE_MD_PATH
+        context_forge_md.parent.mkdir(parents=True, exist_ok=True)
+        # Note: trailing spaces after "ロール"
+        content = "# context-forge 設定\n\n### software-engineer ロール  \n\n- rule1\n"
+        context_forge_md.write_text(content, encoding="utf-8")
+
+        result = read_context_forge_md(tmp_path)
+
+        assert result is not None
+        assert "software-engineer" in result.roles
+        assert len(result.roles["software-engineer"]) == 1
+
 
 class TestWriteContextForgeMd:
     """Tests for write_context_forge_md function."""
