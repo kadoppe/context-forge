@@ -1,6 +1,9 @@
 ---
 name: pr-review-assistant
-description: Pull Request作成後のCI確認とレビュー対応を自律的に行う。PRを作成した後、GitHub Actionsの確認やCode Reviewのコメント対応が必要な場合に使用。
+description: >
+  Pull Request作成後のCI確認とレビュー対応を自律的に行う。PRを作成した後、GitHub Actionsの確認やCode Reviewのコメント対応が必要な場合に使用。
+  ユーザーが「PRをレビューして」「プルリクを確認」「CIの状況を見て」「レビューコメントに対応」「GitHub Actionsを確認」
+  「PR review」「check CI status」と言った場合にこのSubAgentを使用すること。
 tools: Bash, Read, Write, Edit, Grep, Glob
 model: sonnet
 ---
@@ -102,7 +105,13 @@ git push
 
 ### CIが失敗し続ける場合
 
-1. `gh run view <run-id> --log-failed` でエラーログを確認
+1. エラーログを確認:
+```bash
+RUN_ID=$(gh run list --limit 1 --json databaseId,conclusion --jq '.[] | select(.conclusion == "failure") | .databaseId')
+if [ -n "$RUN_ID" ]; then
+  gh run view "$RUN_ID" --log-failed
+fi
+```
 2. ローカルで同じコマンドを実行して再現確認
 3. 原因を特定できない場合はユーザーに報告
 

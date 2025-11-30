@@ -10,6 +10,7 @@ Auto-generated from all feature plans. Last updated: 2025-11-29
 - N/A (ファイルベースのMarkdownプロンプト) (001-improve-subagent-quality)
 - Python 3.11+ / Markdown (Claude Code プロンプト形式) + Typer (CLI), Rich (terminal UI), PyYAML (003-skill-subagent-activation)
 - ファイルシステム（`.claude/` ディレクトリ） (003-skill-subagent-activation)
+- ファイルシステム（`.claude/plugins/`, `.claude/commands/`） (001-role-plugin-migrate)
 
 - Python 3.11+ + Typer (CLI), Rich (terminal UI) (001-context-forge-cli)
 
@@ -29,9 +30,9 @@ cd src [ONLY COMMANDS FOR ACTIVE TECHNOLOGIES][ONLY COMMANDS FOR ACTIVE TECHNOLO
 Python 3.11+: Follow standard conventions
 
 ## Recent Changes
+- 001-role-plugin-migrate: Added Python 3.11+ + Typer (CLI), Rich (terminal UI), PyYAML
 - 003-skill-subagent-activation: Added Python 3.11+ / Markdown (Claude Code プロンプト形式) + Typer (CLI), Rich (terminal UI), PyYAML
 - 001-improve-subagent-quality: Added Markdown (Claude Code プロンプト形式) + Claude Code Plugin System (commands, agents)
-- 001-role-knowledge-plugin: Added Python 3.11+ + Typer (CLI), Rich (terminal UI), PyYAML
 
 
 <!-- MANUAL ADDITIONS START -->

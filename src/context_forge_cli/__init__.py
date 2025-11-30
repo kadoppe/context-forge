@@ -2,6 +2,7 @@
 
 import re
 from dataclasses import dataclass
+from importlib.metadata import version
 from pathlib import Path
 from typing import Any
 
@@ -9,7 +10,7 @@ import typer
 from rich.console import Console
 from rich.panel import Panel
 
-__version__ = "0.1.0"
+__version__ = version("context-forge-cli")
 
 # Exit codes
 EXIT_SUCCESS = 0
@@ -553,10 +554,12 @@ def _install_command(command_name: str, target: InstallTarget, force: bool) -> b
             console.print(f"[yellow]Skipped '{command_name}'.[/yellow]")
             return True  # Not a failure, just skipped
 
-    # Write file
+    # Write file with version placeholder replacement
     try:
         original_content = template.path.read_text(encoding="utf-8")
-        target_path.write_text(original_content, encoding="utf-8")
+        # Replace {{VERSION}} placeholder with current version
+        processed_content = original_content.replace("{{VERSION}}", __version__)
+        target_path.write_text(processed_content, encoding="utf-8")
     except PermissionError:
         show_error(
             f"Cannot write file: {target_path}",
