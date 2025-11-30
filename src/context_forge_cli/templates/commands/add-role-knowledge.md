@@ -140,6 +140,50 @@ Format: 小文字英数字とハイフンのみ (最大64文字)
 
 ---
 
+## Phase 4.5: トリガー表現の入力（Skill/SubAgent のみ）
+
+**Skill または SubAgent を選択した場合**、description に含めるトリガー表現を入力してもらいます。
+
+```
+## トリガー表現の入力
+
+この {knowledge-type} を自動発動させるためのトリガー表現を入力してください。
+
+**最低3つ以上の表現パターンを入力してください。**
+
+Claude Code はこれらの表現を検出すると、この {knowledge-type} を自動的に参照・使用します。
+
+### 入力のコツ
+
+- ユーザーが実際に使いそうな言葉・フレーズを入力
+- 同じ意味でも異なる言い回しをカバー
+- 短いフレーズと長めの表現を混ぜる
+
+### 例（PRレビュー支援の場合）
+
+- PRをレビューして
+- プルリクを確認
+- コードレビュー
+- 差分を見て
+- レビューコメント
+
+カンマ区切りまたは1行1パターンで入力してください:
+```
+
+**バリデーション:**
+- 最低3つのパターンが必要
+- 3つ未満の場合はエラーを表示:
+  ```
+  ⚠️ トリガー表現は最低3つ必要です（現在: {count}個）。
+  追加のパターンを入力してください。
+  ```
+
+**入力されたトリガー表現は以下で使用されます:**
+1. **Phase 5**: Skill/SubAgent の description に含める
+2. **Phase 7.3**: 発動ルールの生成に使用
+
+---
+
 ## Phase 5: ファイル生成
 
 選択されたタイプに応じて、適切なファイルを生成します。
@@ -178,13 +222,32 @@ Format: 小文字英数字とハイフンのみ (最大64文字)
 
 ### Skill ファイルテンプレート
 
+**重要**: description には **3つ以上のトリガー表現パターン** を含めてください。
+これにより Claude Code が適切なタイミングで Skill を参照できるようになります。
+
 ```markdown
 ---
 name: {knowledge-name}
-description: {description}。{trigger-condition}時に参照。
+description: >
+  {description}。
+  ユーザーが「{trigger-pattern-1}」「{trigger-pattern-2}」「{trigger-pattern-3}」について
+  質問・相談した場合に参照すること。
 ---
 
 {content}
+```
+
+**description の生成ルール:**
+1. 知見の概要説明（1-2文）
+2. トリガー表現パターン（最低3つ）を含める
+3. 「について質問・相談した場合に参照すること」で締める
+
+**例:**
+```yaml
+description: >
+  React/TypeScript のベストプラクティスとコーディング規約。
+  ユーザーが「Reactのベストプラクティス」「コンポーネントの書き方」「TypeScriptの型定義」
+  「フロントエンドの設計」について質問・相談した場合に参照すること。
 ```
 
 ### Command ファイルテンプレート
@@ -203,17 +266,23 @@ description: {description}
 
 生成するSubAgentは以下の構造を**必ず**含めてください：
 
-1. **Frontmatter** (YAML形式)
+1. **Frontmatter** (YAML形式) - **description に3つ以上のトリガー表現を含める**
 2. **タイトル** (`# {Agent Name}`)
 3. **概要説明** (1-2文)
 4. **実行手順** (`## 実行手順`) - 番号付きサブセクション
 5. **トラブルシューティング** (`## トラブルシューティング`) - 最低1項目
 6. **注意事項** (`## 注意事項`) - 最低1項目
 
+**重要**: description には **3つ以上のトリガー表現パターン** を含めてください。
+これにより Claude Code が適切なタイミングで SubAgent を Task ツールで呼び出せるようになります。
+
 ```markdown
 ---
 name: {knowledge-name}
-description: {description}
+description: >
+  {description}。
+  ユーザーが「{trigger-pattern-1}」「{trigger-pattern-2}」「{trigger-pattern-3}」と言った場合に
+  このSubAgentを使用すること。
 tools: Bash, Read, Write, Edit, Grep, Glob
 model: sonnet
 ---
@@ -653,7 +722,116 @@ fi
 - 既存の `enabledPlugins` 設定を上書きせず、新しいエントリを追加してください
 - 既に `extraKnownMarketplaces.local` が存在する場合は追加不要です
 
-### 7.3: 完了メッセージ
+### 7.3: 発動ルールの追加（Skill/SubAgent のみ）
+
+**Skill または SubAgent を追加した場合**、以下の手順で発動ルールを `.claude/context-forge.md` に追加します。
+
+#### 7.3.1: context-forge.md の存在確認
+
+1. `.claude/context-forge.md` が存在するか確認
+2. 存在しない場合は、以下のテンプレートで作成:
+
+```markdown
+# context-forge 設定
+
+このファイルは context-forge によって自動生成されます。
+手動で編集した内容は、`add-role-knowledge` コマンド実行時に上書きされる可能性があります。
+
+## Skill/SubAgent 発動ルール
+
+以下のルールに従って、適切な Skill または SubAgent を使用してください。
+
+```
+
+#### 7.3.2: 発動ルールの生成
+
+追加した Skill/SubAgent に対して、以下の形式で発動ルールを生成します:
+
+**ルール形式テンプレート:**
+
+```markdown
+### {role-name} ロール
+
+- ユーザーが「{trigger-pattern-1}」「{trigger-pattern-2}」「{trigger-pattern-3}」と言った場合、
+  必ず {tool-type} ツールで `{knowledge-name}` {knowledge-type} を使用すること
+```
+
+**パラメータ説明:**
+
+| パラメータ | 説明 | 例 |
+|-----------|------|-----|
+| `{role-name}` | ロール名 | `software-engineer` |
+| `{trigger-pattern-N}` | トリガー表現（最低3つ） | `PRをレビューして`, `プルリクを確認`, `コードレビュー` |
+| `{tool-type}` | Skill の場合は空欄、SubAgent の場合は `Task` | `Task` |
+| `{knowledge-name}` | 知見の名前 | `pr-review-assistant` |
+| `{knowledge-type}` | `Skill` または `SubAgent` | `SubAgent` |
+
+**例:**
+
+SubAgent の場合:
+```markdown
+### software-engineer ロール
+
+- ユーザーが「PRをレビューして」「プルリクを確認して」「コードレビュー」「差分を見て」と言った場合、
+  必ず Task ツールで `pr-review-assistant` SubAgent を使用すること
+```
+
+Skill の場合:
+```markdown
+### frontend-engineer ロール
+
+- ユーザーが「Reactのベストプラクティス」「コンポーネントの書き方」「フロントエンドの設計」について質問した場合、
+  `react-best-practices` Skill を参照すること
+```
+
+#### 7.3.3: トリガー表現の入力
+
+ユーザーに発動トリガーとなる表現パターンを入力してもらいます:
+
+```
+## 発動トリガーの設定
+
+追加した {knowledge-type} を自動発動させるための表現パターンを入力してください。
+
+**最低3つ以上の表現パターンを入力してください。**
+
+これらの表現を使ってユーザーが依頼した際に、この {knowledge-type} が自動的に呼び出されます。
+
+例（PRレビュー支援の場合）:
+- PRをレビューして
+- プルリクを確認
+- コードレビュー
+- 差分を見て
+
+カンマ区切りまたは1行1パターンで入力:
+```
+
+**バリデーション:**
+- 最低3つのパターンが必要
+- 3つ未満の場合はエラーを表示して再入力を促す
+
+#### 7.3.4: ロールセクションの追加/更新
+
+1. `.claude/context-forge.md` を読み込む
+2. `### {role-name} ロール` セクションが存在するか確認
+3. **存在しない場合**: 新しいロールセクションを追加
+4. **存在する場合**: 既存セクションに新しいルールを追記
+
+**追記例:**
+
+```markdown
+## Skill/SubAgent 発動ルール
+
+### software-engineer ロール
+
+- ユーザーが「PRをレビューして」「プルリクを確認して」「コードレビュー」と言った場合、
+  必ず Task ツールで `pr-review-assistant` SubAgent を使用すること
+
+- ユーザーが「設計ドキュメント」「ADR」「アーキテクチャ」について質問した場合、
+  `architecture-guidelines` Skill を参照すること
+```
+
+### 7.4: 完了メッセージ
 
 ```
 ## プラグイン生成完了
@@ -689,6 +867,20 @@ fi
 }
 ```
 
+### 発動ルール追加（Skill/SubAgent の場合）
+
+`.claude/context-forge.md` に以下の発動ルールを追加しました:
+
+```markdown
+{generated-activation-rule}
+```
+
+**トリガー表現:**
+- {trigger-pattern-1}
+- {trigger-pattern-2}
+- {trigger-pattern-3}
+- ...
+
 ### 次のステップ
 
 1. Claude Codeを再起動してプラグインをロード
@@ -696,6 +888,7 @@ fi
 3. Skillは関連するタスクで自動参照されます
 4. Commandは `/context-forge.role-{role-name}.{command-name}` で実行できます
 5. Sub Agentは Task ツールで呼び出せます
+6. **発動ルールにより、トリガー表現を使うと自動的に適切な Skill/SubAgent が呼び出されます**
 ```
 
 ---
