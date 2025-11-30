@@ -27,7 +27,7 @@
 - plugin.json は Claude Code プラグインの標準的なメタデータファイル
 - セマンティックバージョニングで将来の互換性管理が容易
 - 既存プラグインは version "1.0.0" を使用している（context-forge 生成時のデフォルト）
-- 最新バージョン "0.0.1" より古いものが更新対象
+- context-forge の現在バージョンより古いものが更新対象
 
 **検討した代替案**:
 - ファイル構造の有無で判定 → バージョン間の差分が不明確
@@ -56,7 +56,7 @@
 - Claude が各コンポーネントの最新仕様を理解して変換
 
 **マイグレーション内容**:
-1. **plugin.json**: version を "0.0.1" に更新
+1. **plugin.json**: version を context-forge の現在バージョンに更新
 2. **agents/*.md**: description に 3つ以上のトリガー表現を追加（未設定の場合）
 3. **skills/*/SKILL.md**: description に 3つ以上のトリガー表現を追加（未設定の場合）
 4. **commands/*.md**: frontmatter 形式の確認・修正

@@ -5,7 +5,7 @@
 
 ## Summary
 
-既存の context-forge role plugin を最新仕様（version 0.0.1）に更新するための migrate コマンドを実装する。これは Claude Code の slash command (`/context-forge.migrate`) として動作し、Claude（LLM）がプラグインを分析・更新する。また、CLI の `context-forge init` コマンドを拡張して、migrate コマンドを含む全ての context-forge.* コマンドファイルをインストールできるようにする。
+既存の context-forge role plugin を最新仕様に更新するための migrate コマンドを実装する。これは Claude Code の slash command (`/context-forge.migrate`) として動作し、Claude（LLM）がプラグインを分析・更新する。また、CLI の `context-forge init` コマンドを拡張して、migrate コマンドを含む全ての context-forge.* コマンドファイルをインストールできるようにする。バージョンは `context-forge init` 時に `{{VERSION}}` プレースホルダーが現在のバージョンに置換される。
 
 ## Technical Context
 

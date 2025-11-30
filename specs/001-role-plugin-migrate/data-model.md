@@ -43,7 +43,7 @@ context-forge で生成された職能別知見プラグイン。
 | フィールド | 型 | 説明 |
 |-----------|-----|------|
 | current | string | 現在のバージョン（plugin.json から取得） |
-| target | string | 目標バージョン（"0.0.1"） |
+| target | string | 目標バージョン（context-forge の現在バージョン） |
 | needs_migration | bool | current < target かどうか |
 
 **状態遷移**:

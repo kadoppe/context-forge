@@ -64,7 +64,7 @@
 ### Functional Requirements
 
 - **FR-001**: Claude は `.claude/plugins/context-forge.role-*` パターンに一致する既存のプラグインを検出できなければならない
-- **FR-002**: Claude は検出したプラグインの `plugin.json` 内の version フィールドを確認し、`0.0.1` より古い場合に更新が必要と判断しなければならない
+- **FR-002**: Claude は検出したプラグインの `plugin.json` 内の version フィールドを確認し、現在の context-forge バージョン（コマンドファイル内に埋め込まれた値）より古い場合に更新が必要と判断しなければならない
 - **FR-003**: Claude は更新が必要なプラグインについて、全コンポーネント（plugin.json, agents/, skills/, commands/, hooks/）を最新の仕様に準拠した形式に変換できなければならない
 - **FR-004**: Claude はマイグレーション実行前に現在のプラグインファイルをバックアップとして保存しなければならない
 - **FR-005**: ユーザーはコマンド引数でプラグイン名を指定してマイグレーション対象を限定できなければならない
@@ -96,7 +96,7 @@
 - Q: 旧形式と最新形式を判別するための基準は何ですか？ → A: plugin.json の version フィールドで判定
 - Q: init 実行時に既存のコマンドファイルが存在する場合、どう処理しますか？ → A: 上書きする（既存ファイルを置き換え）
 - Q: マイグレーション対象となるプラグインコンポーネントは何ですか？ → A: 全コンポーネント（plugin.json, agents/, skills/, commands/, hooks/）
-- Q: context-forge プラグインの現在の最新バージョン番号は何ですか？ → A: 0.0.1
+- Q: context-forge プラグインの現在の最新バージョン番号は何ですか？ → A: pyproject.toml の version フィールドを参照（init 時に {{VERSION}} プレースホルダーが置換される）
 - Q: init コマンドで配置する context-forge コマンドファイルの範囲は？ → A: context-forge.* の全コマンド（将来追加分も含む）
 
 ## Assumptions

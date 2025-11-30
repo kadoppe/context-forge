@@ -215,12 +215,7 @@ Phase 0 で理解した Skill テンプレートに基づいて更新:
 
 上記のいずれかのコンポーネントが更新された場合:
 - 既存の name, description, author は保持
-- version を context-forge の最新バージョンに更新
-
-**バージョン取得手順:**
-1. プロジェクトルートの `pyproject.toml` を読み込む
-2. `version = "X.Y.Z"` の値を抽出
-3. plugin.json の version をその値に更新
+- version を `{{VERSION}}` に更新
 
 ### エラー発生時の処理
 

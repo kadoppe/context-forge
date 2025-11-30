@@ -48,7 +48,7 @@ Claude が以下のレポートを表示します：
 ## マイグレーション完了
 
 ### 更新されたプラグイン
-- context-forge.role-software-engineer (1.0.0 → 0.0.1)
+- context-forge.role-software-engineer (1.0.0 → 0.1.0)
 
 ### スキップされたプラグイン
 - context-forge.role-frontend-engineer（既に最新）
@@ -81,7 +81,7 @@ Claude が以下のレポートを表示します：
 
 Claude は以下の更新を行います：
 
-1. **plugin.json**: version を "0.0.1" に更新
+1. **plugin.json**: version を context-forge の最新バージョンに更新
 2. **agents/*.md**: description にトリガー表現を追加（3つ以上）
 3. **skills/*/SKILL.md**: description にトリガー表現を追加（3つ以上）
 4. **commands/*.md**: frontmatter 形式の確認・修正

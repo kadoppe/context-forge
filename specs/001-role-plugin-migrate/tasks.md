@@ -39,7 +39,7 @@
 - [x] T003 Create migrate.md template file at src/context_forge_cli/templates/commands/migrate.md with YAML frontmatter (description field)
 - [x] T004 Define migrate command structure: Phase 1 (plugin detection), Phase 2 (version check), Phase 3 (backup), Phase 4 (migration), Phase 5 (report)
 - [x] T005 Add plugin detection logic instructions (FR-001): scan `.claude/plugins/context-forge.role-*` pattern
-- [x] T006 Add version comparison logic instructions (FR-002): check plugin.json version < 0.0.1
+- [x] T006 Add version comparison logic instructions (FR-002): check plugin.json version < context-forge current version
 - [x] T007 Add backup creation instructions (FR-004): copy to `.claude/plugins/.backup/{timestamp}_{plugin-name}/`
 - [x] T008 Add migration execution instructions (FR-003): update plugin.json version, add trigger expressions to agents/skills descriptions
 - [x] T009 Add error handling and recovery instructions (FR-008): restore from backup on failure
