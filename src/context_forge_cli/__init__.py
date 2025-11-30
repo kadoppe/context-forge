@@ -23,6 +23,10 @@ CLAUDE_MD_END_MARKER = "<!-- end context-forge settings -->"
 CONTEXT_FORGE_MD_REFERENCE = "@.claude/context-forge.md"
 CONTEXT_FORGE_MD_PATH = ".claude/context-forge.md"
 
+# Role section markers for context-forge.md parsing
+ROLE_HEADER_PREFIX = "### "
+ROLE_HEADER_SUFFIX = " ロール"
+
 # Rich console for output
 console = Console()
 err_console = Console(stderr=True)
@@ -180,13 +184,17 @@ def read_context_forge_md(project_root: Path) -> ContextForgeMdContent | None:
 
     for line in content.split("\n"):
         # Check for role section header: ### {role-name} ロール
-        if line.startswith("### ") and line.endswith(" ロール"):
+        if line.startswith(ROLE_HEADER_PREFIX) and line.endswith(ROLE_HEADER_SUFFIX):
             # Save previous role if exists
             if current_role is not None:
                 roles[current_role] = current_rules
 
-            # Extract role name
-            current_role = line[4:-4].strip()  # Remove "### " and " ロール"
+            # Extract role name by removing prefix and suffix
+            current_role = (
+                line[len(ROLE_HEADER_PREFIX):]
+                .removesuffix(ROLE_HEADER_SUFFIX)
+                .strip()
+            )
             current_rules = []
         elif current_role is not None and line.strip().startswith("- "):
             # This is an activation rule
@@ -638,12 +646,17 @@ def init(
             default=True,
         )
         if migrate:
-            # T027: Migration logic - note: actual content migration would require
-            # more sophisticated parsing. For now, we just add the reference and
-            # inform the user they may need to manually move content.
+            # T027: Migration - add reference and inform user about manual steps
+            # Note: Full content migration is not implemented due to parsing
+            # complexity. Users need to manually move activation rules.
+            console.print()
             console.print(
-                "[dim]注意: 移行は自動で行われますが、"
-                "手動での確認をお勧めします。[/dim]"
+                "[yellow]注意: @ 参照は自動で追加されますが、"
+                "発動ルールの移行は手動で行ってください。[/yellow]"
+            )
+            console.print(
+                "[dim]CLAUDE.md 内の context-forge 関連の設定を "
+                ".claude/context-forge.md にコピーしてください。[/dim]"
             )
 
     try:
