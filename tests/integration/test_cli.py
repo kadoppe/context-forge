@@ -120,7 +120,8 @@ def test_init_command_overwrite_prompt(in_temp_dir: Path) -> None:
     runner.invoke(app, ["init"])
 
     # Second init - should prompt for each file, decline with 'n'
-    result = runner.invoke(app, ["init"], input="n\n")
+    # Need to provide 'n' for each template file (add-role-knowledge.md, migrate.md)
+    result = runner.invoke(app, ["init"], input="n\nn\n")
     # Should complete (skipping existing files)
     assert result.exit_code == 0
     assert "Skipped" in result.stdout or "already" in result.stdout.lower()
