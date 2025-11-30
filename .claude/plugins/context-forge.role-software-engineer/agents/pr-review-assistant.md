@@ -19,30 +19,37 @@ PRに関連するGitHub Actionsワークフローの実行状況を確認しま�
 # PRの最新のチェック状況を確認
 gh pr checks
 
+# CIの完了を待機（リアルタイム監視、最大5分）
+gh run watch
+
 # 失敗している場合は、失敗したrunのIDを取得して詳細を確認
-gh run list --limit 5 --json databaseId,status,conclusion,name
-gh run view <取得したdatabaseId> --log-failed
+RUN_ID=$(gh run list --limit 1 --json databaseId,conclusion --jq '.[] | select(.conclusion == "failure") | .databaseId')
+if [ -n "$RUN_ID" ]; then
+  gh run view "$RUN_ID" --log-failed
+fi
 ```
 
-**リトライ戦略**:
-- チェックが `in_progress` の場合は30秒待機して再確認（最大10回）
-- すべてのチェックが成功するまで監視
+**CI監視**:
+- `gh run watch` でリアルタイム監視（推奨）
+- すべてのチェックが成功するまで待機
 - 失敗がある場合は原因を分析し、必要な修正を提案
+- タイムアウト: 最大5分で打ち切り、状況を報告
 
 ### 2. Claude Code Review コメントの確認
 
 PRに付けられたレビューコメントを確認します。
 
 ```bash
-# PRのレビューコメントを取得（PR番号は gh pr view で確認可能）
+# PRのレビューコメントを取得
 gh pr view --comments
 
-# 現在のリポジトリ情報を取得
-gh repo view --json owner,name
+# リポジトリ情報とPR番号を変数にキャッシュ（API呼び出し削減）
+REPO=$(gh repo view --json nameWithOwner -q '.nameWithOwner')
+PR_NUMBER=$(gh pr view --json number -q '.number')
 
-# レビューの詳細を確認（owner/repo/pr番号は上記コマンドで取得した値を使用）
-gh api repos/$(gh repo view --json owner,name -q '.owner.login + "/" + .name')/pulls/$(gh pr view --json number -q '.number')/reviews
-gh api repos/$(gh repo view --json owner,name -q '.owner.login + "/" + .name')/pulls/$(gh pr view --json number -q '.number')/comments
+# レビューの詳細を確認
+gh api "repos/${REPO}/pulls/${PR_NUMBER}/reviews"
+gh api "repos/${REPO}/pulls/${PR_NUMBER}/comments"
 ```
 
 ### 3. 指摘事項への対応
@@ -55,8 +62,17 @@ gh api repos/$(gh repo view --json owner,name -q '.owner.login + "/" + .name')/p
 4. **コミットとプッシュ**:
 
 ```bash
-# 変更をステージング
-git add -A
+# リモートの変更を取り込み（競合回避）
+git pull --rebase
+
+# 変更内容を確認（意図しない変更がないか確認）
+git diff
+
+# 修正したファイルのみをステージング（-A は使わない）
+git add path/to/modified/file1.md path/to/modified/file2.md
+
+# ステージング内容を最終確認
+git diff --staged
 
 # コミット（修正内容を明記）
 git commit -m "fix: address review comments
@@ -71,6 +87,8 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 # プッシュ
 git push
 ```
+
+**重要**: `git add -A` は全変更をステージングするため、レビュー対応と無関係な変更が混入するリスクがあります。必ず修正したファイルのみを個別に指定してください。
 
 ### 4. 完了報告
 
@@ -110,4 +128,5 @@ gh pr view --json state,reviews,comments
 - 修正を行う前に、必ずユーザーに確認を取ること
 - 大きな変更が必要な場合は、修正案を提示して承認を得ること
 - CIが失敗し続ける場合は、原因と対処法を報告すること
-- タイムアウト: CI監視は最大5分（30秒 × 10回）で打ち切り、状況を報告
+- `git add -A` は使用禁止 - 必ず修正ファイルを個別に指定すること
+- プッシュ前に `git diff --staged` で変更内容を確認すること
