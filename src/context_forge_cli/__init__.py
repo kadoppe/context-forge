@@ -284,8 +284,8 @@ def _get_context_forge_md_template() -> str:
     return """# context-forge 設定
 
 このファイルは context-forge によって自動生成されます。
-手動で編集した内容は、`add-role-knowledge` コマンド実行時に
-上書きされる可能性があります。
+`add-role-knowledge` コマンド実行時に新しいルールが追記されます。
+手動で追加した内容は保持されます。
 
 ## Skill/SubAgent 発動ルール
 
