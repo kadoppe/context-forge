@@ -199,15 +199,257 @@ description: {description}
 
 ### Sub Agent ファイルテンプレート
 
+**必須セクション構造**:
+
+生成するSubAgentは以下の構造を**必ず**含めてください：
+
+1. **Frontmatter** (YAML形式)
+2. **タイトル** (`# {Agent Name}`)
+3. **概要説明** (1-2文)
+4. **実行手順** (`## 実行手順`) - 番号付きサブセクション
+5. **トラブルシューティング** (`## トラブルシューティング`) - 最低1項目
+6. **注意事項** (`## 注意事項`) - 最低1項目
+
 ```markdown
 ---
 name: {knowledge-name}
 description: {description}
-tools: Read, Write, Grep, Glob
+tools: Bash, Read, Write, Edit, Grep, Glob
 model: sonnet
 ---
 
-{content}
+# {Agent Name}
+
+{概要説明 - このAgentが何をするのか1-2文で説明}
+
+## 実行手順
+
+### 1. {ステップ1のタイトル}
+
+{説明}
+
+### 2. {ステップ2のタイトル}
+
+{説明}
+
+## トラブルシューティング
+
+### コマンドが失敗する場合
+
+1. エラーメッセージを確認する
+2. 必要な権限があるか確認する
+3. 環境変数が正しく設定されているか確認する
+
+### {追加の問題があれば記載}
+
+## 注意事項
+
+- **ユーザー確認**: 修正を行う前に、必ずユーザーに確認を取ること
+- **`git add -A` 禁止**: 必ず修正ファイルを個別に指定すること
+- **変更確認**: プッシュ前に `git diff --staged` で変更内容を確認すること
+- {追加の注意事項があれば記載}
+```
+
+#### Sub Agent 品質ルール
+
+生成するSubAgentファイルは以下のルールに**必ず**従ってください：
+
+##### 1. プレースホルダー禁止
+
+コマンド例やコードブロック内に以下のプレースホルダー構文を**残さないでください**：
+
+- ❌ `<run-id>`, `<file-path>`, `<branch-name>` などの山括弧形式
+- ❌ `{owner}/{repo}`, `{pr_number}` などの波括弧形式
+
+代わりに、**動的に値を取得するコマンド**を使用してください：
+
+```bash
+# ❌ 禁止: プレースホルダー
+gh run view <run-id> --log-failed
+gh api repos/{owner}/{repo}/pulls/{pr_number}
+
+# ✅ 推奨: 動的取得
+RUN_ID=$(gh run list --limit 1 --json databaseId -q '.[0].databaseId')
+gh run view "$RUN_ID" --log-failed
+
+REPO=$(gh repo view --json nameWithOwner -q '.nameWithOwner')
+PR_NUMBER=$(gh pr view --json number -q '.number')
+gh api "repos/${REPO}/pulls/${PR_NUMBER}"
+```
+
+**許容されるパターン**:
+- `${VAR_NAME}` - シェル変数展開
+- `$(command)` - コマンド置換
+
+##### 2. Bashコマンドのルール
+
+SubAgentに含めるbashコマンドは以下のルールに従ってください：
+
+**必須: 変数のクォーティング**
+```bash
+# ❌ 禁止: クォートなし（スペースを含むパスで失敗）
+git add $FILE_PATH
+command $VAR
+
+# ✅ 必須: ダブルクォートで囲む
+git add "$FILE_PATH"
+command "$VAR"
+```
+
+**必須: 変数キャッシュ**
+```bash
+# ❌ 禁止: 同じコマンドを複数回実行
+gh api repos/$(gh repo view --json nameWithOwner -q '.nameWithOwner')/pulls
+gh api repos/$(gh repo view --json nameWithOwner -q '.nameWithOwner')/issues
+
+# ✅ 必須: 変数にキャッシュして再利用
+REPO=$(gh repo view --json nameWithOwner -q '.nameWithOwner')
+gh api "repos/${REPO}/pulls"
+gh api "repos/${REPO}/issues"
+```
+
+**必須: エラーハンドリング**
+```bash
+# ❌ 禁止: エラー時の考慮なし
+RUN_ID=$(gh run list ...)
+gh run view "$RUN_ID"
+
+# ✅ 必須: 変数が空でないことを確認
+RUN_ID=$(gh run list --limit 1 --json databaseId -q '.[0].databaseId')
+if [ -n "$RUN_ID" ]; then
+  gh run view "$RUN_ID" --log-failed
+else
+  echo "No failed runs found"
+fi
+```
+
+##### 3. Git操作のルール
+
+SubAgentに含めるgit操作は以下のルールに従ってください：
+
+**禁止: 全ファイルステージング**
+```bash
+# ❌ 禁止: 意図しないファイルがコミットされる危険性
+git add -A
+git add .
+git add --all
+
+# ✅ 必須: 修正したファイルを個別に指定
+git add path/to/modified-file1.md
+git add path/to/modified-file2.md
+```
+
+**必須: コミット前の確認**
+```bash
+# ✅ 必須: 変更内容を確認してからコミット
+git diff --staged  # ステージされた変更を確認
+git status         # ステータスを確認
+```
+
+**推奨: プッシュ前の同期**
+```bash
+# ✅ 推奨: リモートとの同期でコンフリクトを防ぐ
+git pull --rebase
+git log --oneline -3  # 最近のコミットを確認
+```
+
+#### ベストプラクティス参照集
+
+以下は、SubAgentで使用する一般的なパターンの良い例・悪い例です。生成時の参考にしてください。
+
+##### Bashコマンドの良い例・悪い例
+
+**変数キャッシュの完全な例**:
+```bash
+# ❌ 悪い例: API呼び出しが重複
+echo "PR: $(gh pr view --json number -q '.number')"
+echo "Title: $(gh pr view --json title -q '.title')"
+echo "Author: $(gh pr view --json author -q '.author.login')"
+
+# ✅ 良い例: 一度の呼び出しで複数フィールドを取得
+PR_INFO=$(gh pr view --json number,title,author)
+PR_NUMBER=$(echo "$PR_INFO" | jq -r '.number')
+PR_TITLE=$(echo "$PR_INFO" | jq -r '.title')
+PR_AUTHOR=$(echo "$PR_INFO" | jq -r '.author.login')
+echo "PR: $PR_NUMBER, Title: $PR_TITLE, Author: $PR_AUTHOR"
+```
+
+**エラーハンドリングの完全な例**:
+```bash
+# ❌ 悪い例: エラー時に不正な動作
+FAILED_RUN=$(gh run list --status failure --limit 1 --json databaseId -q '.[0].databaseId')
+gh run view "$FAILED_RUN" --log-failed  # FAILED_RUN が空の場合エラー
+
+# ✅ 良い例: 条件分岐で安全に処理
+FAILED_RUN=$(gh run list --status failure --limit 1 --json databaseId -q '.[0].databaseId')
+if [ -n "$FAILED_RUN" ]; then
+  echo "失敗したRunを確認します: $FAILED_RUN"
+  gh run view "$FAILED_RUN" --log-failed
+else
+  echo "失敗したRunは見つかりませんでした"
+fi
+```
+
+##### Git操作の良い例・悪い例
+
+**安全なコミットフローの完全な例**:
+```bash
+# ❌ 悪い例: 確認なしで全ファイルをコミット
+git add -A
+git commit -m "Update files"
+git push
+
+# ✅ 良い例: 確認を挟んで安全にコミット
+# 1. 変更状態を確認
+git status
+
+# 2. リモートと同期
+git pull --rebase
+
+# 3. 個別にファイルをステージ
+git add "src/components/Button.tsx"
+git add "src/styles/button.css"
+
+# 4. ステージした内容を確認
+git diff --staged
+
+# 5. コミット
+git commit -m "feat: Update Button component styles"
+
+# 6. プッシュ前に再確認
+git log --oneline -3
+git push
+```
+
+##### API呼び出しのベストプラクティス（gh コマンド）
+
+**GitHub API の良い例・悪い例**:
+```bash
+# ❌ 悪い例: プレースホルダーを使用
+gh api repos/{owner}/{repo}/pulls/{number}/reviews
+
+# ✅ 良い例: 動的に値を取得
+REPO=$(gh repo view --json nameWithOwner -q '.nameWithOwner')
+PR_NUMBER=$(gh pr view --json number -q '.number')
+gh api "repos/${REPO}/pulls/${PR_NUMBER}/reviews"
+```
+
+**複雑なAPIクエリの例**:
+```bash
+# PRのレビューコメントを取得
+REPO=$(gh repo view --json nameWithOwner -q '.nameWithOwner')
+PR_NUMBER=$(gh pr view --json number -q '.number')
+
+# レビューコメントを取得してパース
+COMMENTS=$(gh api "repos/${REPO}/pulls/${PR_NUMBER}/comments" \
+  --jq '.[] | {path: .path, line: .line, body: .body}')
+
+if [ -n "$COMMENTS" ]; then
+  echo "レビューコメント:"
+  echo "$COMMENTS" | jq -r '"- \(.path):\(.line): \(.body)"'
+else
+  echo "レビューコメントはありません"
+fi
 ```
 
 ### Hook 設定 (hooks.json)
@@ -228,6 +470,103 @@ model: sonnet
     ]
   }
 }
+```
+
+---
+
+## Phase 5.5: 品質チェック（Sub Agent のみ）
+
+**Sub Agent を生成した場合**、ファイル保存前に以下の品質チェックを実行してください。
+
+### チェック項目
+
+| # | チェック項目 | 自動修正 | 対応方法 |
+|---|-------------|---------|---------|
+| 1 | プレースホルダー構文 (`<xxx>`, `{xxx}`) がないか | Yes | 動的コマンドに置換 |
+| 2 | 変数が適切にクォートされているか | Yes | `"$VAR"` 形式に修正 |
+| 3 | `git add -A` や `git add .` を使用していないか | No | 警告を表示（どのファイルを指定すべきか文脈依存のため） |
+| 4 | トラブルシューティングセクションがあるか | Yes | テンプレートから追加 |
+| 5 | 注意事項セクションがあるか | Yes | テンプレートから追加 |
+| 6 | bashコマンドにエラーハンドリングがあるか | No | 警告を表示（適切なパターンは文脈依存のため） |
+
+### 実行手順
+
+1. **生成したファイルを読み込む**
+2. **各チェック項目を検証**
+3. **自動修正可能な項目**: 問題を自動修正する
+4. **自動修正不可能な項目**: 以下の形式で警告を表示
+
+### 自動修正ロジック
+
+#### プレースホルダーの自動修正
+```bash
+# 検出パターン: <run-id>, {owner}/{repo} など
+# 修正: 動的取得コマンドに置換
+
+# Before
+gh run view <run-id>
+
+# After
+RUN_ID=$(gh run list --limit 1 --json databaseId -q '.[0].databaseId')
+gh run view "$RUN_ID"
+```
+
+#### 変数クォーティングの自動修正
+```bash
+# Before
+git add $FILE
+
+# After
+git add "$FILE"
+```
+
+### 警告表示フォーマット
+
+自動修正できない問題（git add -A、エラーハンドリング不足）がある場合は、以下の形式で警告を表示してください：
+
+```
+⚠️ 品質チェック警告
+
+以下の項目は自動修正できませんでした。手動で確認してください:
+
+| # | 項目 | 場所 | 推奨対応 |
+|---|------|------|---------|
+| 1 | 危険なgit操作 | 行 XX | `git add -A` を個別ファイル指定に変更 |
+| 2 | エラーハンドリング不足 | 行 XX | if文で変数チェックを追加 |
+
+続行しますか？ (yes/no)
+```
+
+### 自動修正できない項目のガイダンス
+
+#### なぜ `git add -A` は自動修正できないのか
+
+`git add -A` をどのファイルに置き換えるべきかは、SubAgentの実行コンテキスト（どのファイルを修正したか）に依存するため、自動的に判断できません。
+
+**手動修正の手順:**
+1. SubAgentが修正するファイルを特定する
+2. `git add -A` を `git add "specific/file/path.md"` に置き換える
+3. 複数ファイルの場合は個別に `git add` を記述する
+
+#### なぜエラーハンドリングは自動修正できないのか
+
+適切なエラーハンドリングパターンは、コマンドの目的と期待される動作に依存するため、自動的に判断できません。
+
+**手動修正の手順:**
+1. 変数が空になる可能性があるコマンドを特定する
+2. 以下のテンプレートを参考にエラーハンドリングを追加する
+
+```bash
+# エラーハンドリングテンプレート
+RESULT=$(some_command)
+if [ -n "$RESULT" ]; then
+  # 正常時の処理
+  echo "Success: $RESULT"
+else
+  # エラー時の処理
+  echo "Error: No result found"
+  # 必要に応じて早期リターンやフォールバック処理
+fi
 ```
 
 ---
