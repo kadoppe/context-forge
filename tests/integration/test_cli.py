@@ -60,11 +60,7 @@ def test_init_command_creates_directories_and_installs(tmp_path: Path) -> None:
         assert commands_dir.exists()
         assert commands_dir.is_dir()
 
-        # Check that hello-world command was installed by default
-        hello_world = commands_dir / "context-forge.hello-world.md"
-        assert hello_world.exists()
-
-        # Check that add-role-knowledge command was installed
+        # Check that add-role-knowledge command was installed by default
         add_role_knowledge = commands_dir / "context-forge.add-role-knowledge.md"
         assert add_role_knowledge.exists()
         assert "ロール" in add_role_knowledge.read_text()
@@ -88,8 +84,8 @@ def test_init_command_skip_install(tmp_path: Path) -> None:
         assert commands_dir.exists()
 
         # Check that no commands were installed
-        hello_world = commands_dir / "context-forge.hello-world.md"
-        assert not hello_world.exists()
+        add_role_knowledge = commands_dir / "context-forge.add-role-knowledge.md"
+        assert not add_role_knowledge.exists()
     finally:
         os.chdir(original_cwd)
 
@@ -132,9 +128,8 @@ def test_init_command_overwrite_prompt(tmp_path: Path) -> None:
         # First init
         runner.invoke(app, ["init"])
 
-        # Second init - should prompt for each file, decline all with 'n\n' for each
-        # Number of prompts depends on number of templates
-        result = runner.invoke(app, ["init"], input="n\nn\n")
+        # Second init - should prompt for each file, decline with 'n'
+        result = runner.invoke(app, ["init"], input="n\n")
         # Should complete (skipping existing files)
         assert result.exit_code == 0
         assert "Skipped" in result.stdout or "already" in result.stdout.lower()
@@ -159,7 +154,7 @@ def test_init_command_force_flag(tmp_path: Path) -> None:
 
         # Files should still exist
         commands_dir = tmp_path / ".claude" / "commands"
-        hello_world = commands_dir / "context-forge.hello-world.md"
-        assert hello_world.exists()
+        add_role_knowledge = commands_dir / "context-forge.add-role-knowledge.md"
+        assert add_role_knowledge.exists()
     finally:
         os.chdir(original_cwd)
