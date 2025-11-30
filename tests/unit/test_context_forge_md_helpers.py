@@ -2,8 +2,6 @@
 
 from pathlib import Path
 
-import pytest
-
 from context_forge_cli import (
     CONTEXT_FORGE_MD_PATH,
     read_context_forge_md,
@@ -58,8 +56,8 @@ class TestReadContextForgeMd:
 
 ### software-engineer ロール
 
-- ユーザーが「PRをレビューして」と言った場合、Task ツールで pr-review-assistant を使用すること
-- ユーザーが「コードレビュー」と言った場合、Task ツールで pr-review-assistant を使用すること
+- ユーザーが「PRをレビュー」と言った場合、pr-review-assistant を使用
+- ユーザーが「コードレビュー」と言った場合、pr-review-assistant を使用
 """
         context_forge_md.write_text(content, encoding="utf-8")
 
@@ -79,7 +77,7 @@ class TestReadContextForgeMd:
 
 ### software-engineer ロール
 
-- ユーザーが「PRをレビューして」と言った場合、Task ツールで pr-review-assistant を使用すること
+- ユーザーが「PRをレビュー」と言った場合、pr-review-assistant を使用
 
 ### frontend-engineer ロール
 
@@ -131,7 +129,7 @@ class TestWriteContextForgeMd:
         existing = read_context_forge_md(tmp_path)
 
         # Add a role with activation rule
-        rule = "- ユーザーが「PRをレビューして」と言った場合、Task ツールで pr-review-assistant を使用すること"
+        rule = "- ユーザーが「PRをレビュー」と言った場合、pr-review-assistant を使用"
         write_context_forge_md(tmp_path, existing, "software-engineer", rule)
 
         # Read and verify
@@ -154,12 +152,12 @@ class TestWriteContextForgeMd:
 
 ### software-engineer ロール
 
-- ユーザーが「PRをレビューして」と言った場合、Task ツールで pr-review-assistant を使用すること
+- ユーザーが「PRをレビュー」と言った場合、pr-review-assistant を使用
 """
         context_forge_md.write_text(initial_content, encoding="utf-8")
 
         existing = read_context_forge_md(tmp_path)
-        new_rule = "- ユーザーが「コードレビュー」と言った場合、Task ツールで code-reviewer を使用すること"
+        new_rule = "- ユーザーが「コードレビュー」と言った場合、code-reviewer を使用"
         write_context_forge_md(tmp_path, existing, "software-engineer", new_rule)
 
         result = read_context_forge_md(tmp_path)
@@ -176,12 +174,12 @@ class TestWriteContextForgeMd:
 
 ### software-engineer ロール
 
-- ユーザーが「PRをレビューして」と言った場合、Task ツールで pr-review-assistant を使用すること
+- ユーザーが「PRをレビュー」と言った場合、pr-review-assistant を使用
 """
         context_forge_md.write_text(initial_content, encoding="utf-8")
 
         existing = read_context_forge_md(tmp_path)
-        new_rule = "- ユーザーが「Reactのベストプラクティス」と言った場合、Skill を参照すること"
+        new_rule = "- ユーザーが「Reactベストプラクティス」と言った場合、Skill を参照"
         write_context_forge_md(tmp_path, existing, "frontend-engineer", new_rule)
 
         result = read_context_forge_md(tmp_path)

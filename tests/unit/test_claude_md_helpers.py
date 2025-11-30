@@ -2,8 +2,6 @@
 
 from pathlib import Path
 
-import pytest
-
 from context_forge_cli import (
     CLAUDE_MD_END_MARKER,
     CLAUDE_MD_START_MARKER,
